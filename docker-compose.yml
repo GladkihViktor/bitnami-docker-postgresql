@@ -1,15 +1,34 @@
 version: '2'
 
 services:
-  postgresql:
-    image: 'docker.io/bitnami/postgresql:11-debian-10'
+  master:
+    image: 'docker.io/bitnami/postgresql:13-debian-10'
     ports:
       - '5432:5432'
     volumes:
-      - 'postgresql_data:/bitnami/postgresql'
+      - 'master_data:/bitnami/postgresql'
     environment:
-      - 'ALLOW_EMPTY_PASSWORD=yes'
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=my_password
+      - POSTGRESQL_DATABASE=my_database
+      
+  slave:
+    image: 'docker.io/bitnami/postgresql:13-debian-10'
+    ports:
+      - '5433:5432'
+    depends_on:
+      - master
+    environment:
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_MASTER_HOST=master
+      - POSTGRESQL_PASSWORD=my_password
+      - POSTGRESQL_MASTER_PORT_NUMBER=5432      
 
 volumes:
-  postgresql_data:
+  master_data:
     driver: local
